@@ -59,14 +59,14 @@
 
     <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-10">
-            <h1 class="text-4xl sm:text-5xl font-bold text-logo-dark mb-2">METALITE</h1>
+            <h1 class="text-4xl sm:text-5xl font-bold text-logo-dark mb-2">METALITE x TERNIUM</h1>
             <p class="text-lg text-slate-600">Painel Interativo de Pastas e Graxas para Alta Temperatura</p>
         </header>
 
         <main id="dashboard-view">
             <div class="bg-white p-4 sm:p-6 rounded-xl card-shadow mb-8">
                 <h2 class="text-xl font-bold text-logo-dark mb-4">Filtros de Produtos</h2>
-                <p class="text-slate-600 mb-6 text-sm">Utilize os filtros abaixo para encontrar o produto ideal para a sua necessidade. O gráfico e a lista de produtos serão atualizados automaticamente.</p>
+                <p class="text-slate-600 mb-6 text-sm">Caso prefira, utilize os filtros abaixo para facilitar sua pesquisa.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                     <div>
                         <label for="type-filter" class="block text-sm font-medium text-slate-700 mb-1">Tipo de Produto</label>
@@ -85,20 +85,17 @@
                             <option value="PTFE">PTFE</option>
                             <option value="Cobre">Cobre</option>
                             <option value="Níquel">Níquel</option>
+                            <!-- Adicionando "complexo de lítio" e "sulfonato de cálcio" ao filtro -->
+                            <option value="Complexo de Lítio">Complexo de Lítio</option>
+                            <option value="Sulfonato de Cálcio">Sulfonato de Cálcio</option>
                         </select>
                     </div>
                 </div>
             </div>
-
-            <div class="bg-white p-4 sm:p-6 rounded-xl card-shadow mb-8">
-                <h2 class="text-xl font-bold text-logo-dark mb-4">Comparativo de Temperatura Máxima (°C)</h2>
-                <div class="chart-container">
-                    <canvas id="tempChart"></canvas>
-                </div>
-            </div>
-
+            
             <div id="product-grid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             </div>
+
         </main>
 
         <div id="detail-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
@@ -115,10 +112,14 @@
                     <div class="mt-6 border-t border-slate-200 pt-4">
                         <h3 class="text-md font-semibold text-logo-dark mb-2">Detalhes Técnicos</h3>
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                            <div><dt class="font-medium text-slate-500">Aditivo Principal</dt><dd id="modal-product-additives" class="text-slate-900"></dd></div>
                             <div><dt class="font-medium text-slate-500">Temperatura</dt><dd id="modal-product-temp" class="text-slate-900"></dd></div>
                             <div><dt class="font-medium text-slate-500">NCM</dt><dd id="modal-product-ncm" class="text-slate-900"></dd></div>
                             <div><dt class="font-medium text-slate-500">Embalagens</dt><dd id="modal-product-packs" class="text-slate-900"></dd></div>
                             <div><dt class="font-medium text-slate-500">Valor (Ref.)</dt><dd id="modal-product-price" class="font-semibold text-logo-orange"></dd></div>
+                            <div id="ternium-info-container"><dt class="font-medium text-slate-500">Aprovado e utilizado pela Ternium</dt><dd id="modal-product-ternium-use" class="text-slate-900"></dd></div>
+                            <div id="ternium-cod-container"><dt class="font-medium text-slate-500">Cód. Ternium</dt><dd id="modal-product-ternium-cod" class="text-slate-900"></dd></div>
+                            <div id="product-application-container" class="sm:col-span-2 hidden"><dt class="font-medium text-slate-500">Observação</dt><dd id="modal-product-application" class="text-slate-900"></dd></div>
                         </dl>
                     </div>
                 </div>
@@ -133,21 +134,24 @@
 
     <script>
         const products = [
-            { cod: '1020', ncm: '340.399.00', nome: 'ARIXEN-2', tipo: 'graxa', desc: 'Graxa sintética molibdenizada de alta performance para rolamentos, mancais e correntes. Resistente à água, vapor, oxidação e corrosão.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 235,80', additives: ['MoS2'] },
-            { cod: '10220', ncm: '340.399.00', nome: 'ARIXEN ZYN-T', tipo: 'graxa', desc: 'Graxa sintética de alta performance à base de MoS₂ e grafite, indicada para cargas elevadas e altas temperaturas.', temp: '220°C (até 440°C)', tempMax: 440, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 298,00', additives: ['MoS2', 'Grafite'] },
-            { cod: '1022', ncm: '340.399.00', nome: 'ARIXEN-XP', tipo: 'graxa', desc: 'Graxa sintética com MoS₂ para aplicações de baixa a alta rotação. Impermeável, estável e com aditivos EP.', temp: '250°C', tempMax: 250, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 212,53', additives: ['MoS2'] },
-            { cod: '1020924', ncm: '340.399.00', nome: 'ARIXEN ZYN MO', tipo: 'graxa', desc: 'Graxa sintética com MoS₂ e complexo de titânio, indicada para altas cargas e rotações.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 268,52', additives: ['MoS2'] },
-            { cod: '10210', ncm: '340.399.00', nome: 'ARIXEN ZYN 100', tipo: 'graxa', desc: 'Graxa sintética de complexo de titânio para altas velocidades e temperaturas. Ideal para motores elétricos.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 290,12', additives: [] },
-            { cod: '10200', ncm: '340.399.00', nome: 'ARDIEN ZYN 200', tipo: 'graxa', desc: 'Graxa sintética de alta performance, com base de complexo de lítio, para altas cargas e rotações de até 5.000 RPM.', temp: '280°C', tempMax: 280, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 290,00', additives: [] },
-            { cod: '1099', ncm: '271.019.32', nome: 'XTREME 21', tipo: 'graxa', desc: 'Graxa multiuso à base de sulfonato de cálcio. Ideal para lubrificação de rolamentos e engrenagens.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 243,50', additives: [] },
-            { cod: '10991', ncm: '271.019.32', nome: 'XTREME 21 EP', tipo: 'graxa', desc: 'Graxa multiuso à base de sulfonato de cálcio e bissulfeto de molibdênio, para altas cargas e rotações.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 8kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 245,50', additives: ['MoS2'] },
-            { cod: '1095', ncm: '271.019.32', nome: 'XTREME 30', tipo: 'pasta', desc: 'Pasta antiengripante à base de cobre, para conexões de aço inoxidável, prevenindo engripamento e corrosão.', temp: '1100°C', tempMax: 1100, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 325,50', additives: ['Cobre'] },
-            { cod: '10778', ncm: '271.019.32', nome: 'NICKEL-SHIELD', tipo: 'pasta', desc: 'Pasta antiengripante à base de níquel coloidal, para temperaturas extremas onde graxas de cobre não são adequadas.', temp: '1400°C', tempMax: 1400, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 297,50', additives: ['Níquel'] },
-            { cod: '110501', ncm: '271.019.32', nome: 'METALITE XTREME W-G', tipo: 'pasta', desc: 'Composto vedante e lubrificante à base de PTFE e grafite, ideal para roscas de tubulação petrolífera e flanges.', temp: '260°C', tempMax: 260, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 345,00', additives: ['PTFE', 'Grafite'] },
-            { cod: '1040', ncm: '271.019.32', nome: 'METALITE JLMP', tipo: 'pasta', desc: 'Pasta antiengripante com alto teor de MoS₂, ideal para montagens, desmontagens e ajustes finos.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 328,54', additives: ['MoS2'] },
-            { cod: '21', ncm: '271.019.32', nome: 'METALITE JLMP FLEX', tipo: 'pasta', desc: 'Pasta de montagem com alto teor de MoS₂, ideal para encaixes de precisão e ajustes finos.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 283,04', additives: ['MoS2'] },
-            { cod: '1075', ncm: '382.499.41', nome: 'XTREME 50', tipo: 'pasta', desc: 'Pasta antiengripante e anticorrosiva, com altíssimo teor de MoS₂, para montagens e desmontagens de peças metálicas.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 566,99', additives: ['MoS2'] },
-            { cod: '1114', ncm: '271.019.32', nome: 'GRAPHILITE-50 FLEX', tipo: 'pasta', desc: 'Pasta de montagem com alto teor de grafite, ideal para encaixes de precisão e roscas em ambientes de alta temperatura.', temp: '650°C', tempMax: 650, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 164,60', additives: ['Grafite'] }
+            { cod: '1020', ncm: '340.399.00', nome: 'ARIXEN-2', tipo: 'graxa', desc: 'Graxa sintetica molibdenizada de alta performance para rolamentos,mancais e correntes. Resistente à água, vapor, oxidação e corrosão, garante maior durabilidade e intervalos de relubrificação estendidos. Ideal para aplicações severas em fornos e processos industriais de alta temperatura', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 235,80', additives: ['MoS2'] },
+            { cod: '10220', ncm: '340.399.00', nome: 'ARIXEN ZYN-T', tipo: 'graxa', desc: 'Graxa sintética de alta performance à base de MoS₂ e grafite, indicada para cargas elevadas e altas temperaturas. Oferece alta resistência à água,oxidação e longos intervalos de relubrificação.', temp: '220°C (até 440°C com película sólida)', tempMax: 440, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 298,00', additives: ['MoS2', 'Grafite'], application: 'Este produto está sendo indicado para aplicação nas hastes, braços de articulação e mancais (apoios para o eixo) das válvulas chaminé. Enviado amostra para teste e avaliação.'},
+            { cod: '1022', ncm: '340.399.00', nome: 'ARIXEN-XP', tipo: 'graxa', desc: 'Graxa sintética com MoS₂ para aplicações de baixa a alta rotação. Impermeável, estável e com aditivos EP, oferece excelente proteção contra desgaste, oxidação e corrosão. Ideal para fornos, estufas, rolamentos e ventiladores industriais.', temp: '250°C', tempMax: 250, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 212,53', additives: ['MoS2'] },
+            { cod: '1020924', ncm: '340.399.00', nome: 'ARIXEN ZYN MO', tipo: 'graxa', desc: 'Graxa sintética com MoS₂ e complexo de lítio, indicada para altas cargas e rotações. Resistente à água, oxidação e desgaste, garante maior durabilidade e intervalos de relubrificação prolongados.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 268,52', additives: ['MoS2'] },
+            <!-- Adicionando aditivo principal 'complexo de lítio' para ARIXEN ZYN 100 -->
+            { cod: '10210', ncm: '340.399.00', nome: 'ARIXEN ZYN 100', tipo: 'graxa', desc: 'Graxa sintética de complexo de lítio para altas velocidades e temperaturas. Oferece excelente resistência à água, oxidação e desgaste, ideal para motores elétricos, rolamentos de precisão e aplicações metal x metal ou metal x plástico.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 290,12', additives: ['Complexo de Lítio'] },
+            <!-- Adicionando aditivo principal 'PTFE' para ARIXEN ZYN 200 -->
+            { cod: '10200', ncm: '340.399.00', nome: 'ARIXEN ZYN 200', tipo: 'graxa', desc: ' Graxa sintética de alta performance, com base de complexo de lítio, desenvolvida para resistir a altas cargas e rotações de até 5.000 RPM. Ela é ideal para rolamentos e mancais em temperaturas extremas, oferece excelente resistência à água.', temp: '280°C', tempMax: 280, packs: '1kg/Pote, 6kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 290,00', additives: ['PTFE'], application: 'Esse produto está sendo indicado para aplicação no mancal da bomba centrífuga. Enviado amostra para teste e avaliação.' },
+            <!-- Adicionando aditivo principal 'sulfonato de cálcio' para XTREME 21 -->
+            { cod: '1099', ncm: '271.019.32', nome: 'XTREME 21', tipo: 'graxa', desc: 'Graxa multiuso à base de sulfonato de cálcio. Ela é ideal para lubrificação de rolamentos e engrenagens em diversas aplicações. Sua fórmula oferece resistência a altas pressões, ótima estabilidade mecânica e maior período de relubrificação.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 243,50', additives: ['Sulfonato de Cálcio'] },
+            { cod: '10991', ncm: '271.019.32', nome: 'XTREME 21 EP', tipo: 'graxa', desc: 'Graxa multiuso à base de sulfonato de cálcio e bissulfeto de molibdênio, ideal para aplicações com altas cargas e rotações. Oferece ótima estabilidade mecânica e resistência à oxidação.', temp: '220°C', tempMax: 220, packs: '1kg/Pote, 8kg/Balde, 16kg/Balde, 170kg/Tambor', price: 'R$ 245,50', additives: ['MoS2'] },
+            { cod: '1095', ncm: '271.019.32', nome: 'XTREME 30', tipo: 'pasta', desc: 'Pasta antiengripante à base de cobre, formulado especialmente para conexões de aço inoxidável, prevenindo engripamento e corrosão. Facilitando a montagem e desmontagem de parafusos e prisioneiros, mesmo em ambientes com umidade ou óleo.', temp: '1100°C', tempMax: 1100, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 325,50', additives: ['Cobre'], usedByTernium: true, terniumCod: '74103464' },
+            { cod: '10778', ncm: '271.019.32', nome: 'NICKEL-SHIELD', tipo: 'pasta', desc: 'Pasta antiengripante à base de níquel coloidal, projetado para temperaturas extremas onde graxas de cobre não são adequadas. Sua fórmula resistente a produtos agressivos e à corrosão cria uma película protetora durável, facilitando a montagem e desmontagem de conexões rosqueadas.', temp: '1400°C', tempMax: 1400, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 297,50', additives: ['Níquel'] },
+            { cod: '110501', ncm: '271.019.32', nome: 'METALITE XTREME W-G', tipo: 'pasta', desc: 'Composto vedante e lubrificante à base de PTFE e grafite, ideal para roscas de tubulação petrolífera e flanges. Resistente a químicos, altas pressões e temperaturas, ela facilita a montagem e desmontagem, prevenindo corrosão e desgaste.', temp: '260°C', tempMax: 260, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 345,00', additives: ['PTFE', 'Grafite'] },
+            { cod: '1040', ncm: '271.019.32', nome: 'METALITE JLMP', tipo: 'pasta', desc: 'Pasta antiengripante com alto teor de bissulfeto de molibdênio (MoS2), ideal para montagens, desmontagens e ajustes finos. Sua fórmula resistente à água e a altas temperaturas, previne engripamento, reduz o atrito e protege contra corrosão, mesmo em ambientes marítimos.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 328,54', additives: ['MoS2'] },
+            { cod: '21', ncm: '271.019.32', nome: 'METALITE JLMP FLEX', tipo: 'pasta', desc: 'Pasta de montagem com alto teor de bissulfeto de molibdênio (MoS2), ideal para encaixes de precisão e ajustes finos. Sua fórmula resistente a altas temperaturas, facilita a montagem e desmontagem, reduz o atrito e permite a reutilização das peças.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 283,04', additives: ['MoS2'] },
+            { cod: '1075', ncm: '382.499.41', nome: 'XTREME 50', tipo: 'pasta', desc: 'Pasta antiengripante e anticorrosiva, com altíssimo teor de bissulfeto de molibdênio (MoS2), ideal para montagens e desmontagens de peças metálicas. Sua fórmula resistente à água e a altas temperaturas, previne engripamento, reduz o atrito e protege contra ferrugem e oxidação.', temp: '450°C', tempMax: 450, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 566,99', additives: ['MoS2'] },
+            { cod: '1114', ncm: '271.019.32', nome: 'GRAPHILITE-50 FLEX', tipo: 'pasta', desc: 'Pasta de montagem com alto teor de grafite, ideal para encaixes de precisão e roscas em ambientes de alta temperatura. Sua fórmula resistente à água e a temperaturas elevadas facilita a montagem e desmontagem, prevenindo engripamento e permitindo a reutilização das peças.', temp: '650°C', tempMax: 650, packs: '1kg/Pote, 10kg/Balde, 20kg/Balde, 170kg/Tambor', price: 'R$ 164,60', additives: ['Grafite'] }
         ];
 
         let chart;
@@ -183,7 +187,6 @@
             filtered.sort((a, b) => b.tempMax - a.tempMax);
             
             renderGrid(filtered);
-            updateChart(filtered);
         }
 
         function renderGrid(productsToRender) {
@@ -199,16 +202,13 @@
         }
         
         function updateChart(data) {
-            const labels = data.map(p => p.nome.length > 20 ? p.nome.substring(0, 18) + '...' : p.nome);
-            const temps = data.map(p => p.tempMax);
-            chart.data.labels = labels;
-            chart.data.datasets[0].data = temps;
-            chart.update();
+            // No chart to update
         }
 
         function filterByType(type) {
             currentFilters.type = type;
             document.querySelectorAll('#type-filter button').forEach(btn => btn.classList.remove('active'));
+            // Corrected selector string
             document.querySelector(`#type-filter button[onclick="filterByType('${type}')"]`).classList.add('active');
             applyFilters();
         }
@@ -223,6 +223,7 @@
             if (!product) return;
 
             document.getElementById('modal-product-name').textContent = product.nome;
+            // Corrected template literal
             document.getElementById('modal-product-cod').textContent = `COD: ${product.cod}`;
             document.getElementById('modal-product-description').textContent = product.desc;
             document.getElementById('modal-product-temp').textContent = product.temp;
@@ -230,6 +231,38 @@
             document.getElementById('modal-product-packs').textContent = product.packs;
             document.getElementById('modal-product-price').textContent = product.price;
 
+            document.getElementById('modal-product-additives').textContent = product.additives && product.additives.length > 0 ? product.additives.join(', ') : 'N/A';
+            
+            const terniumInfoContainer = document.getElementById('ternium-info-container');
+            const terniumInfo = document.getElementById('modal-product-ternium-use');
+            if (product.usedByTernium) {
+                terniumInfo.textContent = 'Sim';
+                terniumInfoContainer.style.display = 'block';
+            } else {
+                terniumInfoContainer.style.display = 'none';
+                terniumInfo.textContent = '';
+            }
+
+            const terniumCodContainer = document.getElementById('ternium-cod-container');
+            const terniumCod = document.getElementById('modal-product-ternium-cod');
+            if (product.terniumCod) {
+                terniumCod.textContent = `COD. ${product.terniumCod}`;
+                terniumCodContainer.style.display = 'block';
+            } else {
+                terniumCodContainer.style.display = 'none';
+                terniumCod.textContent = '';
+            }
+            
+            const productApplicationContainer = document.getElementById('product-application-container');
+            const productApplication = document.getElementById('modal-product-application');
+            if (product.application) {
+                productApplication.textContent = product.application;
+                productApplicationContainer.style.display = 'block';
+            } else {
+                productApplicationContainer.style.display = 'none';
+                productApplication.textContent = '';
+            }
+            
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
@@ -241,23 +274,7 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function initializeChart() {
-            const ctx = document.getElementById('tempChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Temperatura Máxima (°C)', data: [], backgroundColor: 'rgba(249, 115, 22, 0.7)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1 }] },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { x: { beginAtZero: true, title: { display: true, text: 'Temperatura (°C)' } } },
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw}°C` } } }
-                }
-            });
-        }
-
         window.onload = () => {
-            initializeChart();
             applyFilters();
         };
     </script>
